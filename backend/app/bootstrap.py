@@ -16,14 +16,21 @@ def bootstrap_admin_and_roster(username: str, email: str, password: str, init_ro
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
+        if len(password) < 4:
+            print("[!] Error: Password must be at least 4 characters.")
+            return
+
         # Check if admin already exists
         existing_admin = db.query(User).filter((User.username == username) | (User.email == email)).first()
         if existing_admin:
-            print(f"[-] User '{username}' already exists. Skipping admin creation.")
+            existing_admin.username = username
+            existing_admin.email = email
+            existing_admin.hashed_password = hash_password(password)
+            existing_admin.role = UserRole.ADMIN
+            existing_admin.is_active = True
+            db.commit()
+            print(f"[+] Existing Admin '{username}' credentials synchronized.")
         else:
-            if len(password) < 8:
-                print("[!] Error: Password must be at least 8 characters.")
-                sys.exit(1)
             admin = User(
                 username=username,
                 email=email,

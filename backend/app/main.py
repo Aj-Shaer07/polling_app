@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         initialize_roster(db=db, force_reset=False)
-        if settings.INITIAL_ADMIN_PASSWORD and len(settings.INITIAL_ADMIN_PASSWORD.strip()) >= 8:
+        if settings.INITIAL_ADMIN_PASSWORD and len(settings.INITIAL_ADMIN_PASSWORD.strip()) >= 4:
             from app.bootstrap import bootstrap_admin_and_roster
             bootstrap_admin_and_roster(
                 username=settings.INITIAL_ADMIN_USERNAME.strip(),
