@@ -1,12 +1,10 @@
-# Belief Stress Test
+# Class Polling App
 ### AI-Powered Live Classroom Diagnostic Platform
 
-[![Live App](https://img.shields.io/badge/Live%20App-Vercel-black)](https://polling-app-murex.vercel.app)
 [![Backend API](https://img.shields.io/badge/API%20Health-Render-emerald)](https://polling-app-lpjc.onrender.com/health)
 [![Tests](https://img.shields.io/badge/pytest-16%20passed-emerald)](./backend/tests)
 [![Frontend](https://img.shields.io/badge/frontend-Vite%20%2B%20React%2018%20%2B%20Tailwind-indigo)](./frontend)
 [![Backend](https://img.shields.io/badge/backend-FastAPI%20%2B%20SQLAlchemy%202.x%20%2B%20Alembic-blue)](./backend)
-[![Roster](https://img.shields.io/badge/roster-45%20Eligible%20Students-green)](./backend/app/services/roster.py)
 
 ---
 
