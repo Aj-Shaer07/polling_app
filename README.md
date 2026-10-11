@@ -1,56 +1,58 @@
 # Belief Stress Test
 ### AI-Powered Live Classroom Diagnostic Platform
 
-[![Tests](https://img.shields.io/badge/pytest-11%20passed-emerald)](file:///backend/tests)
+[![Tests](https://img.shields.io/badge/pytest-16%20passed-emerald)](file:///backend/tests)
 [![Frontend](https://img.shields.io/badge/frontend-Vite%20%2B%20React%2018%20%2B%20Tailwind-indigo)](file:///frontend)
-[![Backend](https://img.shields.io/badge/backend-FastAPI%20%2B%20SQLAlchemy%202.x-blue)](file:///backend)
+[![Backend](https://img.shields.io/badge/backend-FastAPI%20%2B%20SQLAlchemy%202.x%20%2B%20Alembic-blue)](file:///backend)
 [![Roster](https://img.shields.io/badge/roster-45%20Eligible%20Students-green)](file:///backend/app/services/roster.py)
 
 ---
 
 ## 1. Project Overview
 
-In a typical university classroom of 45 students, professors typically hear responses from only a vocal few. The remaining majority represents a hidden distribution: some understand the concept, some are uncertain, and some confidently hold persistent misconceptions. Ordinary polling tools count votes but do not probe *why* students chose their answers or whether their beliefs withstand targeted scrutiny.
+In a typical university classroom of 45 students, professors hear responses from only a vocal few. The remaining majority represents a hidden distribution: some understand the concept, some are uncertain, and some confidently hold persistent misconceptions. Ordinary polling tools count votes but do not probe *why* students chose their answers or whether their beliefs withstand targeted scrutiny.
 
-**Belief Stress Test** is a live classroom interaction platform that transforms student responses into actionable pedagogical diagnostics.
+**Belief Stress Test** is a live classroom interaction platform that transforms student responses into actionable pedagogical diagnostics across multiple questions per lecture session.
 
-### Core Workflow:
-$$\text{Question} \longrightarrow \text{Initial Responses} \longrightarrow \text{Reasoning Analysis} \longrightarrow \text{Targeted Challenge} \longrightarrow \text{Revised Responses} \longrightarrow \text{Follow-Up Assessment} \longrightarrow \text{Instructor Insights}$$
+### Core Workflow (Per Question):
+$$\text{Question} \longrightarrow \text{Round 1 (Initial Belief)} \longrightarrow \text{AI Benchmark \& Reasoning Analysis} \longrightarrow \text{Targeted Challenge (Round 2)} \longrightarrow \text{Instructor Insights \& Benchmark Reveal}$$
 
 ---
 
 ## 2. Key Features
 
 - **Fixed 45-Student Eligibility Enforcement:** Strictly validates the exact 45 eligible students (`241AI001` through `241AI044` + `231AI007`). Rejects `241AI045` and unapproved IDs.
-- **Two-Factor Identity Activation:** Knowing an eligible student ID is insufficient to impersonate someone; students must enter an administrative one-time activation credential (`ACT-XXXXXX`) to activate their account.
-- **Privacy-Preserving Response Architecture:**
-  - *Participation Records:* Track which students have answered each round (attendance/completion visibility for the professor).
-  - *Response Records:* Link only to a session-specific pseudonymous participant identifier (`participant_id`), never student IDs or real names.
-  - Student IDs are never transmitted to external LLM providers.
-- **Semantic Text Clustering & AI Reasoning Diagnostics:**
-  - Groups student explanations using TF-IDF and `MiniBatchKMeans` (`scikit-learn`).
-  - Synthesizes mental models and misconception patterns.
-  - Automatically proposes targeted challenges (Counterexamples for factual questions, Opposing arguments for subjective questions, Prediction reveals, or Transfer questions).
-  - **Human-in-the-Loop:** AI proposals require instructor review and approval before students see them.
-- **Before-and-After Belief Transitions Matrix:**
-  - Real-time tracking of student position changes (who switched from an incorrect belief to the correct concept, who retained their position).
-  - Confidence calibration analysis (1 to 5 scale).
-  - Student self-reported explanations of what influenced their decision.
-- **Concept Retention Follow-Up Assessment:** Releasing a secondary scenario tests whether students can independently apply the concept.
-- **Real-Time Live Updates:** Bi-directional WebSockets push participation updates, round changes, and approvals immediately to professor and student screens.
+- **Direct Student Account Activation & Admin Reset:**
+  - Eligible students activate their account directly at `/student/activate` using their whitelisted Student ID and a chosen password (no paper activation codes required).
+  - Administrators can reset any mistaken or locked student activation in `/admin` with one click (`Reset Activation`).
+- **Strict Role Separation & Cross-Tab Auth Sync:**
+  - `ADMIN` manages professor accounts, student roster activations, and audit logs, and is strictly blocked from accessing classroom sessions or student response content.
+  - `PROFESSOR` manages sessions, questions, rounds, and AI challenge reviews.
+  - `STUDENT` joins live sessions, submits Round 1 & Round 2 responses, and reviews their personal submission history and the revealed Instructor Benchmark.
+  - `BroadcastChannel` (`bst_auth_sync`) + `storage` events keep authentication and logout synchronized instantaneously across all open browser tabs.
+- **Multi-Question Sessions & Adaptive Question Builder:**
+  - Professors can add multiple questions to a single lecture session, edit questions while in `DRAFT` mode, and manage each question's round lifecycle (`DRAFT` → `OPEN_ROUND_1` → `ANALYZING` → `CHALLENGE_PENDING` → `OPEN_ROUND_2` → `COMPLETED`) on a dedicated page (`/professor/sessions/:sessionId/questions/:questionId`).
+  - Supports 4 question types (**Factual / Technical**, **Subjective / Viewpoints**, **Prediction**, **Open-Ended Reasoning**) with adaptive student inputs (Multiple Choice, Numerical Estimate, or Free-Form Text) and **Instructor Benchmarks** (`reference_answer` and `accepted_reasoning`).
+- **Benchmark Matching, Semantic Clustering & Gemini 3.8 Flash Reasoning Evaluation:**
+  - Evaluates student answers against the professor's `reference_answer` (exact match, numerical tolerance, or semantic equivalence).
+  - Evaluates student written explanations against the professor's `accepted_reasoning` rubric using TF-IDF + `MiniBatchKMeans` (`scikit-learn`) combined with **Gemini 3.8 Flash** (`gemini-3.8-flash` via `google-genai`).
+  - Groups every student submission into evaluated mental-model categories (`ReasoningCategory`) and proposes a Socratic Round 2 challenge (`COUNTEREXAMPLE`, `OPPOSING_ARGUMENTS`, `PREDICTION_REVEAL`, or `TRANSFER_QUESTION`) for instructor review and approval.
+- **Authenticated Real-Time WebSockets & Cold-Start Resilience:**
+  - Authenticated `/ws/sessions/{session_id}` streams real-time participation and round updates while isolating sessions so students can only subscribe to sessions they have joined.
+  - Built-in automatic retry and cold-start waking banner for free-tier cloud hosting.
 
 ---
 
 ## 3. Technology Stack
 
-- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Recharts, Lucide Icons, QR Code SVG.
-- **Backend:** Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.x, WebSockets, Argon2id, PyJWT, Scikit-learn, NumPy.
-- **Database:** SQLite (local dev) / PostgreSQL (production) with strict foreign key constraints and uniqueness constraints.
-- **AI Integration:** Google GenAI SDK (`google-genai`) with Gemini 2.5 Flash / Gemini 2.0 Flash, plus an intelligent local `MockAIProvider` for deterministic testing and offline reliability.
+- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Recharts, React Router v6, Lucide Icons, QR Code SVG (Deployed on **Vercel**).
+- **Backend:** Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.x, Alembic, WebSockets, Argon2id, PyJWT, Scikit-learn, NumPy (Deployed on **Render Native Python Runtime**).
+- **Database:** Managed PostgreSQL (**Neon**) in production; SQLite supported for local development.
+- **AI Integration:** Google GenAI SDK (`google-genai`) using `gemini-3.8-flash`, with automatic fail-safe fallback to `MockAIProvider`.
 
 ---
 
-## 4. Quickstart
+## 4. Local Quickstart
 
 ### Start the Application (Single Command):
 ```bash
@@ -58,33 +60,26 @@ $$\text{Question} \longrightarrow \text{Initial Responses} \longrightarrow \text
 ```
 
 - **Frontend Portal:** [http://localhost:5173](http://localhost:5173)
-- **Backend API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **Backend API & Health Check:** [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
 
-### Default User Accounts:
+### Default Local Accounts:
 - **Professor:** `prof_nash` / `ProfPassword2026!`
 - **Administrator:** `admin` / `AdminSecurePass2026!`
-- **Students:** See [`COLD_START.md`](file:///COLD_START.md) or run `backend/.venv/bin/python backend/reset_roster_codes.py` to view all 45 activation codes.
+- **Students:** Any of the 45 eligible IDs (`241AI001`–`241AI044`, `231AI007`) via `/student/activate`.
 
 ---
 
-## 5. Verification & Test Suite
+## 5. Verification & Automated Test Suite
 
-The comprehensive test suite verifies:
-1. Role-based access control and cookie/token authentication.
-2. Exact 45-student roster boundary checks (`241AI045` rejected).
-3. Round-locking and duplicate submission rejection.
-4. AI provider challenge generation and text clustering fallbacks.
-5. **Full 45-Student Classroom Simulation:** Simulates all 45 students activating accounts, joining a live session, answering Round 1, AI reasoning categorization, professor challenge review & approval, Round 2 revisions, follow-up assessment, and belief transition matrix calculation.
-
-Run all tests:
+Run all 16 backend unit, integration, deployment-readiness, and 45-student classroom simulation tests:
 ```bash
 backend/.venv/bin/pytest backend/tests -v
 ```
-*Result: 11 passed (100% pass rate).*
+*Result: 16 passed (100% pass rate).*
 
 ---
 
 ## 6. Guides & Documentation
 
-- [**Professor Quickstart Guide**](file:///PROFESSOR_GUIDE.md): 3-minute classroom walkthrough.
-- [**Cold Start & Deployment Guide**](file:///COLD_START.md): Environment configuration, Gemini API key integration, and Render/Vercel deployment instructions.
+- [**Professor Quickstart Guide**](file:///PROFESSOR_GUIDE.md): Classroom workflow for multi-question sessions, Instructor Benchmarks, and AI Challenge review.
+- [**Cold Start & Production Deployment Guide**](file:///COLD_START.md): Local setup, `gemini-3.8-flash` configuration, and step-by-step Neon PostgreSQL + Render + Vercel deployment guide.

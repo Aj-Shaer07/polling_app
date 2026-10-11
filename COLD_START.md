@@ -1,10 +1,10 @@
-# Cold Start & Operational Guide: Belief Stress Test
+# Cold Start & Production Deployment Guide: Belief Stress Test
 
-This guide contains everything you need to cold start, configure, run tests, and deploy **Belief Stress Test**.
+This guide covers local startup, Gemini 3.8 Flash configuration, automated verification, and production deployment using **Neon PostgreSQL**, **Render (Native Python Runtime)**, and **Vercel**.
 
 ---
 
-## 1. Quick Cold Start (Single Command)
+## 1. Local Cold Start (Single Command)
 
 In your terminal at the project root:
 
@@ -12,100 +12,103 @@ In your terminal at the project root:
 ./start.sh
 ```
 
-This will automatically:
-1. Verify the Python virtual environment (`backend/.venv`).
-2. Initialize the local database (`belief_stress_test.db`) with the 45 eligible students and admin/professor accounts if not already initialized.
-3. Start the FastAPI backend on **`http://127.0.0.1:8000`**.
-4. Start the Vite React frontend on **`http://localhost:5173`**.
-
-Open your browser at **`http://localhost:5173`**.
+This script automatically:
+1. Verifies the Python virtual environment (`backend/.venv`).
+2. Runs database schema initialization and seeds the 45 eligible students (`241AI001`–`241AI044` + `231AI007`) and local accounts.
+3. Starts the FastAPI backend on **`http://127.0.0.1:8000`**.
+4. Starts the Vite React frontend on **`http://localhost:5173`**.
 
 ---
 
-## 2. Default Logins & Credentials
+## 2. Default Local Credentials
 
 | Role | Username / ID | Password | Access URL |
 | :--- | :--- | :--- | :--- |
 | **Professor** | `prof_nash` | `ProfPassword2026!` | `http://localhost:5173/login` |
 | **Administrator** | `admin` | `AdminSecurePass2026!` | `http://localhost:5173/login` |
-| **Student** | Any of the 45 IDs (e.g. `241AI001`) | Set during activation | `http://localhost:5173/student/activate` |
+| **Student** | `241AI001`–`241AI044`, `231AI007` | Set during activation | `http://localhost:5173/student/activate` |
 
 ---
 
-## 3. Configuring the Gemini API Key
+## 3. Configuring Gemini 3.8 Flash (`GEMINI_API_KEY`)
 
-The application is built with a **provider-neutral AI interface (`AIProvider`)**.
-- **Without an API key:** The application automatically runs on a high-fidelity, deterministic `MockAIProvider`. It clusters explanations using `scikit-learn` and creates structured reasoning categories and counterexamples locally without external API dependencies.
-- **To connect your real Gemini API key:**
-  1. Open or create `backend/.env` (or copy from `backend/.env.example`).
-  2. Set:
-     ```env
-     GEMINI_API_KEY="AIzaSyYourActualGeminiApiKeyHere"
-     GEMINI_MODEL="gemini-2.5-flash"
-     ```
-  3. Restart the backend.
-  4. The platform will automatically use the official `google-genai` SDK with structured JSON schemas. If a rate limit or API outage occurs, the backend will gracefully fall back to the local provider without interrupting the live classroom!
+The backend uses the official Google GenAI SDK (`google-genai`) via [`llm_provider.py`](file:///backend/app/services/llm_provider.py):
+1. Copy `backend/.env.example` to `backend/.env`.
+2. Configure your Gemini API key and model:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_MODEL=gemini-3.8-flash
+   ```
+3. When Round 1 closes, `GeminiProvider` evaluates student answers and explanations against the professor's **Instructor Benchmark** (`reference_answer` and `accepted_reasoning`), groups students into mental-model categories (`ReasoningCategory`), and proposes a targeted Round 2 Socratic challenge.
+4. If `GEMINI_API_KEY` is omitted or rate-limited during a live class, the backend automatically falls back to `MockAIProvider` so the lecture never stalls.
 
 ---
 
-## 4. Student Roster (The Exact 45 IDs) & Account Activation
+## 4. Student Roster & Account Management
 
-Exactly **45 students** are permitted:
+Exactly **45 students** are eligible:
 - `241AI001` through `241AI044` (44 students)
 - `231AI007` (1 student)
 
-### Direct Password Activation:
-Students activate their accounts directly without needing paper activation codes:
-1. Student visits `/student/activate` (or scans classroom QR).
-2. Student enters their eligible Student ID (e.g. `241AI001`) and chooses their personal password (min 6 characters).
-3. The platform validates against the 45-student roster table. Ineligible IDs (such as `241AI045` or non-whitelisted strings) are immediately rejected with `403 Forbidden`.
-4. Once activated, the student identity is claimed and can log in with their chosen password. Repeated attempts to claim an already-activated student ID are rejected with `400 Bad Request`.
+- **Student Activation (`/student/activate`):** Students enter their eligible Student ID and create a password (min 6 characters). Unapproved IDs (such as `241AI045`) are rejected with `403 Forbidden`.
+- **Admin Activation Reset (`/admin`):** If a student needs their password reset or an activation cleared, the Admin can click **Reset Activation** next to that student ID in the Admin Console.
 
 ---
 
-## 5. Running the Automated Test Suite
+## 5. Running the Automated Test Suite & Migrations
 
-To run all 11 unit, integration, and simulation tests:
+Run Alembic migrations:
+```bash
+cd backend && .venv/bin/alembic upgrade head
+```
 
+Run all 16 automated tests:
 ```bash
 backend/.venv/bin/pytest backend/tests -v
 ```
 
-This tests:
-- Password hashing & JWT RBAC
-- Exact 45-student roster boundary checks (`241AI045` rejected)
-- Response integrity & duplicate submission rejection
-- AI clustering & fallback resilience
-- **Full 45-student simulated classroom:** All 45 students join, submit answers, AI groups reasoning, professor approves challenge, students submit revisions, and the belief transition matrix is calculated.
-
 ---
 
-## 6. Production Deployment Instructions
+## 6. Production Deployment (Neon + Render + Vercel)
 
-### A. Database (PostgreSQL)
-1. Provision a PostgreSQL instance (e.g., on Render, Neon, Supabase, or AWS RDS).
-2. Set the connection string in your backend environment variables:
-   `DATABASE_URL="postgresql://user:password@host:5432/dbname"`
+### Step A: Push Repository to GitHub
+```bash
+git remote add origin https://github.com/<your-username>/<your-repo>.git
+git push -u origin main
+```
 
-### B. Backend (Render Free Web Service)
-1. In Render, create a **New Web Service** connected to your repository.
-2. Select **Docker** environment (uses `backend/Dockerfile`), or Python with:
-   - Root Directory: `backend`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-3. Add Environment Variables:
-   - `DATABASE_URL` = your PostgreSQL URL
-   - `SECRET_KEY` = a 32+ character random string
-   - `COOKIE_SECURE` = `True`
-   - `CORS_ORIGINS` = `https://your-frontend.vercel.app`
-   - `GEMINI_API_KEY` = your Gemini API key (optional)
+### Step B: Provision Managed PostgreSQL on Neon
+1. Create a new PostgreSQL project in [Neon Console](https://console.neon.tech).
+2. Copy the PostgreSQL connection string (`postgresql://...` with `?sslmode=require`).
+
+### Step C: Deploy Backend to Render (Native Python Runtime)
+1. In [Render Dashboard](https://dashboard.render.com), create a **New Web Service** connected to your GitHub repository (or use the Blueprint [`render.yaml`](file:///render.yaml)).
+2. Configure:
+   - **Runtime:** `Python 3` (Native Python runtime — no Docker)
+   - **Root Directory:** `backend`
+   - **Build Command:** `pip install -r requirements.txt && alembic upgrade head`
+   - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Health Check Path:** `/health`
+3. Set Environment Variables in Render:
+   - `PYTHON_VERSION` = `3.12.6`
    - `ENVIRONMENT` = `production`
+   - `LOG_LEVEL` = `INFO`
+   - `DATABASE_URL` = *(your Neon PostgreSQL connection string with `?sslmode=require`)*
+   - `SECRET_KEY` = *(unique random string of at least 32 characters)*
+   - `GEMINI_API_KEY` = *(your Gemini API key)*
+   - `GEMINI_MODEL` = `gemini-3.8-flash`
+   - `INITIAL_ADMIN_USERNAME` = `admin`
+   - `INITIAL_ADMIN_EMAIL` = `admin@classroom.edu`
+   - `INITIAL_ADMIN_PASSWORD` = *(strong password of 8+ characters; auto-bootstraps the initial admin and 45-student roster on first startup)*
+   - `CORS_ORIGINS` = *(your production Vercel URL, e.g. `https://your-app.vercel.app`)*
 
-### C. Frontend (Vercel)
-1. In Vercel, import the repository and set Root Directory to `frontend`.
-2. Framework Preset: **Vite**.
-3. Build Command: `npm run build`
-4. Output Directory: `dist`
-5. Environment Variables:
-   - `VITE_API_BASE_URL` = `https://your-backend.onrender.com`
-   - `VITE_WS_BASE_URL` = `wss://your-backend.onrender.com`
+### Step D: Deploy Frontend to Vercel
+1. In [Vercel Dashboard](https://vercel.com/new), import the GitHub repository.
+2. Configure:
+   - **Framework Preset:** `Vite`
+   - **Root Directory:** `frontend`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+3. Set Environment Variable in Vercel:
+   - `VITE_API_BASE_URL` = *(your live Render backend URL, e.g. `https://belief-stress-test-api.onrender.com`, without a trailing slash)*
+4. Deploy the frontend, then ensure `CORS_ORIGINS` in Render matches your assigned Vercel production domain.
