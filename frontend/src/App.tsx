@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { API_BASE } from './api/client';
 import { Navbar } from './components/Navbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
@@ -38,6 +39,16 @@ const RootRedirect: React.FC = () => {
 };
 
 export const App: React.FC = () => {
+  // Keep Render backend warm while any browser tab is open (Render free tier sleeps after 15m inactivity)
+  useEffect(() => {
+    const pingHealth = () => {
+      fetch(`${API_BASE}/health`, { method: 'GET' }).catch(() => {});
+    };
+    pingHealth();
+    const interval = setInterval(pingHealth, 4 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <AuthProvider>
       <BrowserRouter>
