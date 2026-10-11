@@ -1,10 +1,20 @@
 # Belief Stress Test
 ### AI-Powered Live Classroom Diagnostic Platform
 
-[![Tests](https://img.shields.io/badge/pytest-16%20passed-emerald)](file:///backend/tests)
-[![Frontend](https://img.shields.io/badge/frontend-Vite%20%2B%20React%2018%20%2B%20Tailwind-indigo)](file:///frontend)
-[![Backend](https://img.shields.io/badge/backend-FastAPI%20%2B%20SQLAlchemy%202.x%20%2B%20Alembic-blue)](file:///backend)
-[![Roster](https://img.shields.io/badge/roster-45%20Eligible%20Students-green)](file:///backend/app/services/roster.py)
+[![Live App](https://img.shields.io/badge/Live%20App-Vercel-black)](https://polling-app-murex.vercel.app)
+[![Backend API](https://img.shields.io/badge/API%20Health-Render-emerald)](https://polling-app-lpjc.onrender.com/health)
+[![Tests](https://img.shields.io/badge/pytest-16%20passed-emerald)](./backend/tests)
+[![Frontend](https://img.shields.io/badge/frontend-Vite%20%2B%20React%2018%20%2B%20Tailwind-indigo)](./frontend)
+[![Backend](https://img.shields.io/badge/backend-FastAPI%20%2B%20SQLAlchemy%202.x%20%2B%20Alembic-blue)](./backend)
+[![Roster](https://img.shields.io/badge/roster-45%20Eligible%20Students-green)](./backend/app/services/roster.py)
+
+---
+
+## Live Production Deployment
+
+- **Live Frontend (Vercel):** [https://polling-app-murex.vercel.app](https://polling-app-murex.vercel.app)
+- **Live Backend API (Render):** [https://polling-app-lpjc.onrender.com](https://polling-app-lpjc.onrender.com)
+- **Live Health Check:** [https://polling-app-lpjc.onrender.com/health](https://polling-app-lpjc.onrender.com/health)
 
 ---
 
@@ -15,7 +25,9 @@ In a typical university classroom of 45 students, professors hear responses from
 **Belief Stress Test** is a live classroom interaction platform that transforms student responses into actionable pedagogical diagnostics across multiple questions per lecture session.
 
 ### Core Workflow (Per Question):
-$$\text{Question} \longrightarrow \text{Round 1 (Initial Belief)} \longrightarrow \text{AI Benchmark \& Reasoning Analysis} \longrightarrow \text{Targeted Challenge (Round 2)} \longrightarrow \text{Instructor Insights \& Benchmark Reveal}$$
+```text
+Question ➔ Round 1 (Initial Belief) ➔ AI Benchmark & Reasoning Analysis ➔ Targeted Challenge (Round 2) ➔ Instructor Insights & Benchmark Reveal
+```
 
 ---
 
@@ -39,7 +51,7 @@ $$\text{Question} \longrightarrow \text{Round 1 (Initial Belief)} \longrightarro
   - Groups every student submission into evaluated mental-model categories (`ReasoningCategory`) and proposes a Socratic Round 2 challenge (`COUNTEREXAMPLE`, `OPPOSING_ARGUMENTS`, `PREDICTION_REVEAL`, or `TRANSFER_QUESTION`) for instructor review and approval.
 - **Authenticated Real-Time WebSockets & Cold-Start Resilience:**
   - Authenticated `/ws/sessions/{session_id}` streams real-time participation and round updates while isolating sessions so students can only subscribe to sessions they have joined.
-  - Built-in automatic retry and cold-start waking banner for free-tier cloud hosting.
+  - Built-in automatic retry, cold-start waking banner, and 4-minute keep-warm heartbeat for free-tier cloud hosting.
 
 ---
 
@@ -59,8 +71,8 @@ $$\text{Question} \longrightarrow \text{Round 1 (Initial Belief)} \longrightarro
 ./start.sh
 ```
 
-- **Frontend Portal:** [http://localhost:5173](http://localhost:5173)
-- **Backend API & Health Check:** [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+- **Frontend Portal:** `http://localhost:5173`
+- **Backend API & Health Check:** `http://127.0.0.1:8000/health`
 
 ### Default Local Accounts:
 - **Professor:** `prof_nash` / `ProfPassword2026!`
@@ -81,5 +93,5 @@ backend/.venv/bin/pytest backend/tests -v
 
 ## 6. Guides & Documentation
 
-- [**Professor Quickstart Guide**](file:///PROFESSOR_GUIDE.md): Classroom workflow for multi-question sessions, Instructor Benchmarks, and AI Challenge review.
-- [**Cold Start & Production Deployment Guide**](file:///COLD_START.md): Local setup, `gemini-3.8-flash` configuration, and step-by-step Neon PostgreSQL + Render + Vercel deployment guide.
+- [**Professor Quickstart Guide**](./PROFESSOR_GUIDE.md): Classroom workflow for multi-question sessions, Instructor Benchmarks, and AI Challenge review.
+- [**Cold Start & Production Deployment Guide**](./COLD_START.md): Local setup, `gemini-3.8-flash` configuration, and step-by-step Neon PostgreSQL + Render + Vercel deployment guide.

@@ -32,7 +32,7 @@ This script automatically:
 
 ## 3. Configuring Gemini 3.8 Flash (`GEMINI_API_KEY`)
 
-The backend uses the official Google GenAI SDK (`google-genai`) via [`llm_provider.py`](file:///backend/app/services/llm_provider.py):
+The backend uses the official Google GenAI SDK (`google-genai`) via [`backend/app/services/llm_provider.py`](./backend/app/services/llm_provider.py):
 1. Copy `backend/.env.example` to `backend/.env`.
 2. Configure your Gemini API key and model:
    ```env
@@ -71,9 +71,12 @@ backend/.venv/bin/pytest backend/tests -v
 
 ## 6. Production Deployment (Neon + Render + Vercel)
 
+- **Live Frontend (Vercel):** [https://polling-app-murex.vercel.app](https://polling-app-murex.vercel.app)
+- **Live Backend (Render):** [https://polling-app-lpjc.onrender.com](https://polling-app-lpjc.onrender.com)
+
 ### Step A: Push Repository to GitHub
 ```bash
-git remote add origin https://github.com/<your-username>/<your-repo>.git
+git remote add origin https://github.com/Aj-Shaer07/polling_app.git
 git push -u origin main
 ```
 
@@ -82,7 +85,7 @@ git push -u origin main
 2. Copy the PostgreSQL connection string (`postgresql://...` with `?sslmode=require`).
 
 ### Step C: Deploy Backend to Render (Native Python Runtime)
-1. In [Render Dashboard](https://dashboard.render.com), create a **New Web Service** connected to your GitHub repository (or use the Blueprint [`render.yaml`](file:///render.yaml)).
+1. In [Render Dashboard](https://dashboard.render.com), create a **New Web Service** connected to your GitHub repository (or use the Blueprint [`render.yaml`](./render.yaml)).
 2. Configure:
    - **Runtime:** `Python 3` (Native Python runtime — no Docker)
    - **Root Directory:** `backend`
@@ -99,8 +102,8 @@ git push -u origin main
    - `GEMINI_MODEL` = `gemini-3.8-flash`
    - `INITIAL_ADMIN_USERNAME` = `admin`
    - `INITIAL_ADMIN_EMAIL` = `admin@classroom.edu`
-   - `INITIAL_ADMIN_PASSWORD` = *(strong password of 8+ characters; auto-bootstraps the initial admin and 45-student roster on first startup)*
-   - `CORS_ORIGINS` = *(your production Vercel URL, e.g. `https://your-app.vercel.app`)*
+   - `INITIAL_ADMIN_PASSWORD` = *(admin password; auto-bootstraps the initial admin and 45-student roster on startup)*
+   - `CORS_ORIGINS` = `https://polling-app-murex.vercel.app`
 
 ### Step D: Deploy Frontend to Vercel
 1. In [Vercel Dashboard](https://vercel.com/new), import the GitHub repository.
@@ -110,5 +113,4 @@ git push -u origin main
    - **Build Command:** `npm run build`
    - **Output Directory:** `dist`
 3. Set Environment Variable in Vercel:
-   - `VITE_API_BASE_URL` = *(your live Render backend URL, e.g. `https://belief-stress-test-api.onrender.com`, without a trailing slash)*
-4. Deploy the frontend, then ensure `CORS_ORIGINS` in Render matches your assigned Vercel production domain.
+   - `VITE_API_BASE_URL` = `https://polling-app-lpjc.onrender.com`
