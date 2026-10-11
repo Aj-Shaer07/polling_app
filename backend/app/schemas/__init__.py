@@ -1,0 +1,85 @@
+from app.schemas.auth import (
+    LoginRequest,
+    StudentActivateRequest,
+    StudentLoginRequest,
+    ProfessorCreateRequest,
+    UserResponse,
+    Token,
+)
+from app.schemas.roster import (
+    EligibleStudentResponse,
+    RosterBootstrapResponse,
+    RosterImportRequest,
+    RosterItemWithCode,
+)
+from app.schemas.session import (
+    SessionCreate,
+    SessionResponse,
+    SessionDetailResponse,
+    SessionStatusUpdate,
+    JoinSessionRequest,
+    ParticipationDashboard,
+    StudentParticipationStatus,
+)
+from app.schemas.question import (
+    QuestionCreate,
+    QuestionUpdate,
+    QuestionResponse,
+    QuestionStudentView,
+)
+from app.schemas.response import (
+    InitialResponseSubmission,
+    RevisedResponseSubmission,
+    FollowUpResponseSubmission,
+    StudentResponseView,
+    AnswerDistributionItem,
+    ConfidenceDistributionItem,
+    BeliefTransitionItem,
+    AggregateAnalysisResponse,
+)
+from app.schemas.challenge import (
+    ReasoningCategoryResponse,
+    ReasoningCategoryUpdate,
+    ChallengeProposalResponse,
+    ChallengeReviewRequest,
+    ChallengeStudentView,
+)
+from app.schemas.audit import AuditLogResponse
+
+__all__ = [
+    "LoginRequest",
+    "StudentActivateRequest",
+    "StudentLoginRequest",
+    "ProfessorCreateRequest",
+    "UserResponse",
+    "Token",
+    "EligibleStudentResponse",
+    "RosterBootstrapResponse",
+    "RosterImportRequest",
+    "RosterItemWithCode",
+    "SessionCreate",
+    "SessionResponse",
+    "SessionDetailResponse",
+    "SessionStatusUpdate",
+    "JoinSessionRequest",
+    "ParticipationDashboard",
+    "StudentParticipationStatus",
+    "QuestionCreate",
+    "QuestionUpdate",
+    "QuestionResponse",
+    "QuestionStudentView",
+    "InitialResponseSubmission",
+    "RevisedResponseSubmission",
+    "FollowUpResponseSubmission",
+    "StudentResponseView",
+    "AnswerDistributionItem",
+    "ConfidenceDistributionItem",
+    "BeliefTransitionItem",
+    "AggregateAnalysisResponse",
+    "ReasoningCategoryResponse",
+    "ReasoningCategoryUpdate",
+    "ChallengeProposalResponse",
+    "ChallengeReviewRequest",
+    "ChallengeStudentView",
+    "AuditLogResponse",
+]
