@@ -4,12 +4,13 @@ from sqlalchemy.orm import Session
 
 from app.models.question import Question, QuestionType
 from app.models.response import StudentResponse
+from app.models.roster import EligibleStudent
 from app.models.session import SessionParticipation
 from app.schemas.response import (
     AnswerDistributionItem,
     ConfidenceDistributionItem,
     BeliefTransitionItem,
-    ProfessorStudentResponseItem,
+    QuestionStudentParticipationItem,
     AggregateAnalysisResponse,
 )
 
@@ -242,54 +243,45 @@ def get_aggregate_analysis(
     transitions = compute_belief_transitions(r1_responses, r2_responses)
     insight = generate_instructor_insight(question, r1_dist, r2_dist, transitions)
 
-    r1_items: List[ProfessorStudentResponseItem] = []
-    r2_items: List[ProfessorStudentResponseItem] = []
+    student_participation: List[QuestionStudentParticipationItem] = []
 
     if include_individual:
+        eligible = db.query(EligibleStudent).order_by(EligibleStudent.student_id).all()
         participations = (
             db.query(SessionParticipation)
             .filter(SessionParticipation.session_id == question.session_id)
             .all()
         )
-        participant_to_student = {p.participant_id: p.student_id for p in participations}
+        part_by_student = {p.student_id: p for p in participations}
+        r1_by_participant = {r.participant_id: r.submitted_at for r in r1_responses}
+        r2_by_participant = {r.participant_id: r.submitted_at for r in r2_responses}
 
-        for r in r1_responses:
-            r1_items.append(
-                ProfessorStudentResponseItem(
-                    id=r.id,
-                    student_id=participant_to_student.get(r.participant_id, "Participant"),
-                    round_number=1,
-                    answer=r.answer,
-                    confidence=r.confidence,
-                    explanation=r.explanation,
-                    prediction=r.prediction,
-                    changed_answer=r.changed_answer,
-                    change_reason=r.change_reason,
-                    is_reference_correct=_matches_reference_benchmark(r.answer, question.reference_answer),
-                    category_title=r.category.title if r.category else None,
-                    submitted_at=r.submitted_at,
+        for s in eligible:
+            p = part_by_student.get(s.student_id)
+            if p:
+                r1_at = r1_by_participant.get(p.participant_id)
+                r2_at = r2_by_participant.get(p.participant_id)
+                student_participation.append(
+                    QuestionStudentParticipationItem(
+                        student_id=s.student_id,
+                        joined=True,
+                        round_1_submitted=r1_at is not None,
+                        round_1_submitted_at=r1_at,
+                        round_2_submitted=r2_at is not None,
+                        round_2_submitted_at=r2_at,
+                    )
                 )
-            )
-        r1_items.sort(key=lambda x: x.student_id)
-
-        for r in r2_responses:
-            r2_items.append(
-                ProfessorStudentResponseItem(
-                    id=r.id,
-                    student_id=participant_to_student.get(r.participant_id, "Participant"),
-                    round_number=2,
-                    answer=r.answer,
-                    confidence=r.confidence,
-                    explanation=r.explanation,
-                    prediction=r.prediction,
-                    changed_answer=r.changed_answer,
-                    change_reason=r.change_reason,
-                    is_reference_correct=_matches_reference_benchmark(r.answer, question.reference_answer),
-                    category_title=None,
-                    submitted_at=r.submitted_at,
+            else:
+                student_participation.append(
+                    QuestionStudentParticipationItem(
+                        student_id=s.student_id,
+                        joined=False,
+                        round_1_submitted=False,
+                        round_1_submitted_at=None,
+                        round_2_submitted=False,
+                        round_2_submitted_at=None,
+                    )
                 )
-            )
-        r2_items.sort(key=lambda x: x.student_id)
 
     return AggregateAnalysisResponse(
         question_id=question_id,
@@ -300,7 +292,7 @@ def get_aggregate_analysis(
         confidence_distributions_round_1=conf1,
         confidence_distributions_round_2=conf2,
         belief_transitions=transitions,
-        round_1_responses=r1_items,
-        round_2_responses=r2_items,
+        student_participation=student_participation,
         instructor_insight=insight,
     )
+
