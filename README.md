@@ -1,5 +1,5 @@
 # Class Polling App
-### AI-Powered Live Classroom Diagnostic Platform
+### AI-Powered Live Classroom Diagnostic & Polling Platform
 
 [![Backend API](https://img.shields.io/badge/API%20Health-Render-emerald)](https://polling-app-lpjc.onrender.com/health)
 [![Tests](https://img.shields.io/badge/pytest-16%20passed-emerald)](./backend/tests)
@@ -18,13 +18,13 @@
 
 ## 1. Project Overview
 
-In a typical university classroom of 45 students, professors hear responses from only a vocal few. The remaining majority represents a hidden distribution: some understand the concept, some are uncertain, and some confidently hold persistent misconceptions. Ordinary polling tools count votes but do not probe *why* students chose their answers or whether their beliefs withstand targeted scrutiny.
+In a typical university classroom of 45 students, professors hear responses from only a vocal few. The remaining majority represents a hidden distribution: some understand the concept, some are uncertain, and some confidently hold persistent misconceptions. Ordinary polling tools count votes but do not probe *why* students chose their answers or whether their reasoning holds up when challenged.
 
-**Belief Stress Test** is a live classroom interaction platform that transforms student responses into actionable pedagogical diagnostics across multiple questions per lecture session.
+**Class Polling App** is a live classroom interaction platform that transforms student responses into actionable pedagogical diagnostics across multiple questions per lecture session.
 
 ### Core Workflow (Per Question):
 ```text
-Question ➔ Round 1 (Initial Belief) ➔ AI Benchmark & Reasoning Analysis ➔ Targeted Challenge (Round 2) ➔ Instructor Insights & Benchmark Reveal
+Question ➔ Round 1 (Initial Response) ➔ AI Benchmark & Reasoning Analysis ➔ Targeted Challenge (Round 2) ➔ Instructor Insights & Benchmark Reveal
 ```
 
 ---
@@ -91,5 +91,7 @@ backend/.venv/bin/pytest backend/tests -v
 
 ## 6. Guides & Documentation
 
+- [**Project Overview & Architecture**](./PROJECT_OVERVIEW.md): Comprehensive explanation of the pedagogical problem, AI benchmark & reasoning evaluation pipeline, role separation, and privacy architecture.
+- [**Student Activation & Participation Guide**](./STUDENT_GUIDE.md): Step-by-step guide for the 45 eligible students on activating their Student ID, logging in, joining a live session, and participating in Round 1 & Round 2.
 - [**Professor Quickstart Guide**](./PROFESSOR_GUIDE.md): Classroom workflow for multi-question sessions, Instructor Benchmarks, and AI Challenge review.
 - [**Cold Start & Production Deployment Guide**](./COLD_START.md): Local setup, `gemini-3.8-flash` configuration, and step-by-step Neon PostgreSQL + Render + Vercel deployment guide.

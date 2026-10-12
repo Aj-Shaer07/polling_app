@@ -1,7 +1,7 @@
-# Professor Quickstart Guide: Belief Stress Test
-## AI-Powered Live Classroom Diagnostic Platform
+# Professor Quickstart Guide: Class Polling App
+## AI-Powered Live Classroom Diagnostic & Polling Platform
 
-Welcome! **Belief Stress Test** helps you diagnose hidden student misconceptions during lectures, evaluate student answers and reasoning against your **Instructor Benchmark**, and stress-test student beliefs using targeted Round 2 challenges.
+Welcome! **Class Polling App** helps you diagnose hidden student misconceptions during lectures, evaluate student answers and reasoning against your **Instructor Benchmark**, and challenge student reasoning using targeted Round 2 prompts.
 
 ---
 
@@ -34,7 +34,7 @@ Welcome! **Belief Stress Test** helps you diagnose hidden student misconceptions
 
 Click **"Manage Question & Rounds"** on any question card to open its dedicated control page (`/professor/sessions/:sessionId/questions/:questionId`):
 
-### Step 1: Open Round 1 (Initial Belief)
+### Step 1: Open Round 1 (Initial Response)
 - Click **"Start Round 1"**.
 - Students immediately see the question on their devices and submit their answer, **Confidence Rating (1–5)**, and **written reasoning**.
 - Monitor real-time completion across the 45-student roster.
@@ -48,9 +48,9 @@ Click **"Manage Question & Rounds"** on any question card to open its dedicated 
   4. Propose a targeted Socratic **Round 2 Challenge** (`COUNTEREXAMPLE`, `OPPOSING_ARGUMENTS`, `PREDICTION_REVEAL`, or `TRANSFER_QUESTION`).
 - Review or edit the proposed challenge in the modal and click **"Approve & Open Round 2"**.
 
-### Step 3: Round 2 (Belief Stress Test & Revision)
+### Step 3: Round 2 (Challenge & Revision)
 - Students read the approved challenge on their screen and choose whether to **keep** or **revise** their Round 1 answer, updating their confidence and explaining why.
-- Watch the live **Belief Transitions Matrix** and **Round 1 vs. Round 2 Distribution Charts** update in real time.
+- Watch the live **Response Transitions Matrix** and **Round 1 vs. Round 2 Distribution Charts** update in real time.
 
 ### Step 4: Complete Question & Reveal Benchmark
 - Click **"Complete Question"** when Round 2 concludes.

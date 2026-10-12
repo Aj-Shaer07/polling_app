@@ -275,7 +275,7 @@ class GeminiProvider(AIProvider):
             for idx, r in enumerate(responses_data)
         ]
 
-        prompt = f"""You are an expert pedagogical reasoning evaluator for a live university classroom platform (Belief Stress Test).
+        prompt = f"""You are an expert pedagogical reasoning evaluator for a live university classroom platform (Class Polling App).
 
 QUESTION DETAILS:
 - Question Text: {question_text}
@@ -342,7 +342,7 @@ Output MUST be valid JSON matching this exact schema:
         distributions: List[Dict[str, Any]],
         accepted_reasoning: Optional[str] = None,
     ) -> Dict[str, Any]:
-        prompt = f"""You are designing a targeted live classroom challenge (Round 2 Belief Stress Test) to stress-test student reasoning without simply giving away the answer.
+        prompt = f"""You are designing a targeted live classroom challenge (Round 2 in Class Polling App) to stress-test student reasoning without simply giving away the answer.
 
 QUESTION DETAILS:
 - Question: {question_text}
@@ -403,7 +403,7 @@ Output MUST be valid JSON with this exact schema:
         transitions: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         prompt = f"""
-Summarize the outcomes of a two-round Belief Stress Test:
+Summarize the outcomes of a two-round Class Polling App diagnostic question:
 Question: {question_text}
 Aggregates: {json.dumps(aggregates, indent=2)}
 Belief Transitions: {json.dumps(transitions, indent=2)}

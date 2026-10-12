@@ -38,7 +38,7 @@ export const Login: React.FC = () => {
             Ψ
           </div>
           <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            Belief Stress Test
+            Class Polling App
           </h2>
           <p className="mt-2 text-sm text-slate-600">
             Instructor & Administrator Access Portal

@@ -37,7 +37,7 @@ export const Navbar: React.FC = () => {
           </div>
           <div>
             <span className="font-bold text-lg text-slate-900 tracking-tight flex items-center gap-2">
-              Belief Stress Test
+              Class Polling App
             </span>
             <span className="text-xs text-slate-500 hidden sm:block">
               AI-Powered Live Classroom Diagnostic

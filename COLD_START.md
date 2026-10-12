@@ -1,4 +1,4 @@
-# Cold Start & Production Deployment Guide: Belief Stress Test
+# Cold Start & Production Deployment Guide: Class Polling App
 
 This guide covers local startup, Gemini 3.8 Flash configuration, automated verification, and production deployment using **Neon PostgreSQL**, **Render (Native Python Runtime)**, and **Vercel**.
 

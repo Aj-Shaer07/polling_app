@@ -9,7 +9,7 @@ _DEFAULT_DEV_SECRET = "dev-secret-key-change-in-prod-must-be-at-least-32-chars-l
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Belief Stress Test"
+    PROJECT_NAME: str = "Class Polling App"
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "INFO"
     DATABASE_URL: str = "sqlite:///./belief_stress_test.db"
