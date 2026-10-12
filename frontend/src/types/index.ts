@@ -101,6 +101,21 @@ export interface BeliefTransitionItem {
   sample_change_reasons: string[];
 }
 
+export interface ProfessorStudentResponseItem {
+  id: string;
+  student_id: string;
+  round_number: number;
+  answer: string;
+  confidence: number;
+  explanation?: string | null;
+  prediction?: string | null;
+  changed_answer?: boolean | null;
+  change_reason?: string | null;
+  is_reference_correct?: boolean | null;
+  category_title?: string | null;
+  submitted_at: string;
+}
+
 export interface AggregateAnalysisResponse {
   question_id: string;
   round_1_total: number;
@@ -110,6 +125,8 @@ export interface AggregateAnalysisResponse {
   confidence_distributions_round_1: ConfidenceDistributionItem[];
   confidence_distributions_round_2: ConfidenceDistributionItem[];
   belief_transitions: BeliefTransitionItem[];
+  round_1_responses?: ProfessorStudentResponseItem[];
+  round_2_responses?: ProfessorStudentResponseItem[];
   instructor_insight?: string | null;
   ai_summary?: string | null;
 }

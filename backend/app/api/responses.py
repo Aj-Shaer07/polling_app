@@ -205,4 +205,8 @@ def get_question_results(
                 detail="Results will be revealed once the round closes.",
             )
 
-    return get_aggregate_analysis(db, question_id)
+    return get_aggregate_analysis(
+        db,
+        question_id,
+        include_individual=(current_user.role == UserRole.PROFESSOR),
+    )

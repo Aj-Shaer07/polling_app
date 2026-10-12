@@ -53,6 +53,8 @@ export const ProfessorQuestionView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRound, setSelectedRound] = useState<1 | 2>(1);
+  const [selectedAnswerFilter, setSelectedAnswerFilter] = useState<string | null>(null);
 
   const loadData = async () => {
     if (!sessionId || !questionId) return;
@@ -65,7 +67,18 @@ export const ProfessorQuestionView: React.FC = () => {
       ]);
       setSession(sessData);
       setQuestions(qListData);
-      setQuestion(qData);
+      setQuestion((prevQ) => {
+        if (prevQ?.status !== qData.status) {
+          if (qData.status === 'OPEN_ROUND_2') {
+            setSelectedRound(2);
+            setSelectedAnswerFilter(null);
+          } else if (qData.status === 'OPEN_ROUND_1') {
+            setSelectedRound(1);
+            setSelectedAnswerFilter(null);
+          }
+        }
+        return qData;
+      });
       setParticipation(partData);
 
       // Try loading results, categories, and challenges for this question
@@ -343,19 +356,26 @@ export const ProfessorQuestionView: React.FC = () => {
 
       {/* 4 Stage Workflow Stepper */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-        <div
-          className={`p-3 rounded-xl border text-center transition-all ${
-            currentStatus === 'OPEN_ROUND_1'
-              ? 'bg-emerald-50 border-emerald-400 font-bold text-emerald-900 ring-2 ring-emerald-200'
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedRound(1);
+            setSelectedAnswerFilter(null);
+          }}
+          className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
+            selectedRound === 1
+              ? 'bg-emerald-50 border-emerald-500 font-bold text-emerald-900 ring-2 ring-emerald-200'
+              : currentStatus === 'OPEN_ROUND_1'
+              ? 'bg-emerald-50/60 border-emerald-300 font-bold text-emerald-900'
               : r1Count > 0
-              ? 'bg-slate-50 border-slate-200 text-slate-700'
+              ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
               : 'bg-white border-slate-100 text-slate-400'
           }`}
         >
-          <div className="font-semibold text-[10px] uppercase tracking-wider text-slate-400">Step 1</div>
+          <div className="font-semibold text-[10px] uppercase tracking-wider text-slate-400">Step 1 (Click to View)</div>
           <div className="font-bold mt-0.5">Round 1 (Initial)</div>
           <div className="text-[11px] text-slate-500 mt-1">{r1Count} Submissions</div>
-        </div>
+        </button>
 
         <div
           className={`p-3 rounded-xl border text-center transition-all ${
@@ -387,25 +407,34 @@ export const ProfessorQuestionView: React.FC = () => {
           </div>
         </div>
 
-        <div
-          className={`p-3 rounded-xl border text-center transition-all ${
-            currentStatus === 'OPEN_ROUND_2'
-              ? 'bg-purple-50 border-purple-400 font-bold text-purple-900 ring-2 ring-purple-200'
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedRound(2);
+            setSelectedAnswerFilter(null);
+          }}
+          className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
+            selectedRound === 2
+              ? 'bg-purple-50 border-purple-500 font-bold text-purple-900 ring-2 ring-purple-200'
+              : currentStatus === 'OPEN_ROUND_2'
+              ? 'bg-purple-50/60 border-purple-300 font-bold text-purple-900'
               : r2Count > 0
-              ? 'bg-slate-50 border-slate-200 text-slate-700'
+              ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
               : 'bg-white border-slate-100 text-slate-400'
           }`}
         >
-          <div className="font-semibold text-[10px] uppercase tracking-wider text-slate-400">Step 4</div>
+          <div className="font-semibold text-[10px] uppercase tracking-wider text-slate-400">Step 4 (Click to View)</div>
           <div className="font-bold mt-0.5">Round 2 (Revisions)</div>
           <div className="text-[11px] text-slate-500 mt-1">{r2Count} Revisions</div>
-        </div>
+        </button>
       </div>
 
       {/* Visual Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-          <h3 className="font-bold text-slate-900 text-sm">Round 1: Initial Answer Distribution</h3>
+          <h3 className="font-bold text-slate-900 text-sm">
+            Answer Distribution (Round 1 vs Round 2)
+          </h3>
           <AnswerDistributionChart
             round1Data={results?.round_1_distributions || []}
             round2Data={results?.round_2_distributions || []}
@@ -413,10 +442,40 @@ export const ProfessorQuestionView: React.FC = () => {
           />
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-          <h3 className="font-bold text-slate-900 text-sm">Round 1: Initial Confidence Ratings (1 to 5)</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-slate-900 text-sm">
+              {selectedRound === 1
+                ? 'Round 1: Initial Confidence Ratings (1 to 5)'
+                : 'Round 2: Revised Confidence Ratings (1 to 5)'}
+            </h3>
+            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg text-[11px]">
+              <button
+                type="button"
+                onClick={() => setSelectedRound(1)}
+                className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                  selectedRound === 1 ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600'
+                }`}
+              >
+                R1
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedRound(2)}
+                className={`px-2 py-0.5 rounded-md font-semibold transition-all ${
+                  selectedRound === 2 ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-600'
+                }`}
+              >
+                R2
+              </button>
+            </div>
+          </div>
           <ConfidenceDistributionChart
-            data={results?.confidence_distributions_round_1 || []}
-            title="Initial Confidence Distribution"
+            data={
+              selectedRound === 1
+                ? results?.confidence_distributions_round_1 || []
+                : results?.confidence_distributions_round_2 || []
+            }
+            title={selectedRound === 1 ? 'Initial Confidence Distribution' : 'Revised Confidence Distribution'}
           />
         </div>
       </div>
@@ -443,6 +502,197 @@ export const ProfessorQuestionView: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* How Students Answered in the Particular Round (Round 1 vs Round 2) */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+              <Users className="w-5 h-5 text-indigo-600" />
+              <span>
+                Student Responses in Round {selectedRound} (
+                {selectedRound === 1 ? 'Initial Beliefs' : 'Post-Challenge Revisions'})
+              </span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Inspect how each student answered, their confidence level, and their written reasoning in Round {selectedRound}.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedRound(1);
+                setSelectedAnswerFilter(null);
+              }}
+              className={`px-3.5 py-1.5 rounded-lg font-bold transition-all ${
+                selectedRound === 1
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Round 1 ({r1Count})
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedRound(2);
+                setSelectedAnswerFilter(null);
+              }}
+              className={`px-3.5 py-1.5 rounded-lg font-bold transition-all ${
+                selectedRound === 2
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Round 2 ({r2Count})
+            </button>
+          </div>
+        </div>
+
+        {/* Option Breakdown Filter Pills for Selected Round */}
+        {(() => {
+          const activeDist =
+            selectedRound === 1
+              ? results?.round_1_distributions || []
+              : results?.round_2_distributions || [];
+          const activeResponses =
+            selectedRound === 1
+              ? results?.round_1_responses || []
+              : results?.round_2_responses || [];
+          const filteredResponses = selectedAnswerFilter
+            ? activeResponses.filter((r) => r.answer.trim() === selectedAnswerFilter)
+            : activeResponses;
+
+          if (activeResponses.length === 0) {
+            return (
+              <div className="p-8 text-center text-slate-400 text-sm bg-slate-50 rounded-xl border border-slate-100">
+                No student responses submitted for Round {selectedRound} yet.
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-4">
+              {/* Filter by Answer Option in this Round */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-slate-500">Filter by answer:</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAnswerFilter(null)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                    selectedAnswerFilter === null
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  All ({activeResponses.length})
+                </button>
+                {activeDist.map((d, idx) => {
+                  const isSelected = selectedAnswerFilter === d.answer;
+                  const isBench = d.is_reference_correct === true;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() =>
+                        setSelectedAnswerFilter(isSelected ? null : d.answer)
+                      }
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+                        isSelected
+                          ? isBench
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                            : 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                          : isBench
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{d.answer}</span>
+                      <span className="opacity-80 font-bold">
+                        ({d.count} • {d.percentage}%)
+                      </span>
+                      {isBench && <CheckCircle className="w-3.5 h-3.5" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Individual Student Cards for Selected Round */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[460px] overflow-y-auto pr-1">
+                {filteredResponses.map((resp) => {
+                  const isBench = resp.is_reference_correct === true;
+                  return (
+                    <div
+                      key={resp.id}
+                      className={`p-4 rounded-xl border space-y-2 transition-all ${
+                        isBench
+                          ? 'bg-emerald-50/40 border-emerald-200'
+                          : 'bg-slate-50/70 border-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-800">
+                          {resp.student_id}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {selectedRound === 2 && resp.changed_answer !== null && resp.changed_answer !== undefined && (
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                resp.changed_answer
+                                  ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                  : 'bg-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {resp.changed_answer ? 'Switched Answer' : 'Retained Answer'}
+                            </span>
+                          )}
+                          <span className="text-xs font-semibold text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                            Conf: <strong>{resp.confidence}/5</strong>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <div
+                          className={`text-sm font-bold px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 ${
+                            isBench
+                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                              : selectedRound === 1
+                              ? 'bg-indigo-50 text-indigo-900 border border-indigo-200'
+                              : 'bg-amber-50 text-amber-900 border border-amber-200'
+                          }`}
+                        >
+                          {isBench && <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />}
+                          <span>{resp.answer}</span>
+                        </div>
+                        {resp.category_title && (
+                          <span className="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 truncate max-w-[180px]">
+                            {resp.category_title}
+                          </span>
+                        )}
+                      </div>
+
+                      {selectedRound === 1 && resp.explanation && (
+                        <p className="text-xs text-slate-700 italic bg-white/90 p-2.5 rounded-lg border border-slate-200/80">
+                          "{resp.explanation}"
+                        </p>
+                      )}
+
+                      {selectedRound === 2 && resp.change_reason && (
+                        <p className="text-xs text-slate-700 italic bg-white/90 p-2.5 rounded-lg border border-amber-200/80">
+                          "{resp.change_reason}"
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+      </div>
 
       {/* Round 2 Revisions & Belief Transitions Matrix */}
       {r2Count > 0 && (

@@ -61,6 +61,21 @@ class BeliefTransitionItem(BaseModel):
     sample_change_reasons: List[str] = []
 
 
+class ProfessorStudentResponseItem(BaseModel):
+    id: str
+    student_id: str
+    round_number: int
+    answer: str
+    confidence: int
+    explanation: Optional[str] = None
+    prediction: Optional[str] = None
+    changed_answer: Optional[bool] = None
+    change_reason: Optional[str] = None
+    is_reference_correct: Optional[bool] = None
+    category_title: Optional[str] = None
+    submitted_at: datetime
+
+
 class AggregateAnalysisResponse(BaseModel):
     question_id: str
     round_1_total: int
@@ -70,5 +85,7 @@ class AggregateAnalysisResponse(BaseModel):
     confidence_distributions_round_1: List[ConfidenceDistributionItem] = []
     confidence_distributions_round_2: List[ConfidenceDistributionItem] = []
     belief_transitions: List[BeliefTransitionItem] = []
+    round_1_responses: List[ProfessorStudentResponseItem] = []
+    round_2_responses: List[ProfessorStudentResponseItem] = []
     instructor_insight: Optional[str] = None
     ai_summary: Optional[str] = None
