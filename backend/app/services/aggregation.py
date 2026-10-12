@@ -12,6 +12,34 @@ from app.schemas.response import (
 )
 
 
+import re
+
+
+def _extract_option_parts(text: str) -> List[str]:
+    """
+    Given an answer or benchmark string like 'Option A: 6', 'A) 6', or '6',
+    extract candidate normalized forms:
+    - full string ('option a: 6')
+    - option label ('option a', 'a')
+    - option value after prefix ('6')
+    """
+    clean = text.strip().lower()
+    if not clean:
+        return []
+    parts = [clean]
+    m = re.match(r"^(?:(option\s+[a-z0-9]+)|([a-z0-9]))\s*[:\)\.\-\u2013\u2014]\s*(.+)$", clean)
+    if m:
+        label_full = (m.group(1) or m.group(2) or "").strip()
+        value_part = (m.group(3) or "").strip()
+        if label_full:
+            parts.append(label_full)
+            if label_full.startswith("option "):
+                parts.append(label_full[len("option "):].strip())
+        if value_part:
+            parts.append(value_part)
+    return parts
+
+
 def _matches_reference_benchmark(answer: str, reference_answer: Optional[str]) -> Optional[bool]:
     if not reference_answer or not reference_answer.strip():
         return None
@@ -19,15 +47,22 @@ def _matches_reference_benchmark(answer: str, reference_answer: Optional[str]) -
     ref_clean = reference_answer.strip().lower()
     if ans_clean == ref_clean:
         return True
-    # Numeric comparison for prediction / numerical questions (e.g. "50" vs "50.0" or "50%")
-    try:
-        ans_num = float(ans_clean.rstrip("%").strip())
-        ref_num = float(ref_clean.rstrip("%").strip())
-        if abs(ans_num - ref_num) <= max(1e-6, abs(ref_num) * 0.02):
-            return True
-        return False
-    except ValueError:
-        pass
+
+    ans_parts = _extract_option_parts(answer)
+    ref_parts = _extract_option_parts(reference_answer)
+
+    for a_part in ans_parts:
+        for r_part in ref_parts:
+            if a_part == r_part:
+                return True
+            try:
+                a_num = float(re.sub(r"^[$€£₹]|%$", "", a_part).strip())
+                r_num = float(re.sub(r"^[$€£₹]|%$", "", r_part).strip())
+                if abs(a_num - r_num) <= max(1e-6, abs(r_num) * 0.02):
+                    return True
+            except ValueError:
+                pass
+
     # Normalized token containment for free-form benchmark answers
     if len(ref_clean) >= 4 and (ref_clean in ans_clean or ans_clean in ref_clean):
         return True

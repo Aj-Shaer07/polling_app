@@ -314,8 +314,38 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
                 placeholder={currentMeta.benchmarkPlaceholder}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-indigo-600"
               />
-              <span className="text-[11px] text-slate-400 mt-0.5 block">
-                Revealed to students after session completion to verify learning against instructor benchmark.
+              {answerFormat === 'choices' &&
+                choicesText
+                  .split('\n')
+                  .map((c) => c.trim())
+                  .filter((c) => c.length > 0).length > 0 && (
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[11px] font-semibold text-slate-500">Quick select correct option:</span>
+                    {choicesText
+                      .split('\n')
+                      .map((c) => c.trim())
+                      .filter((c) => c.length > 0)
+                      .map((choice, idx) => {
+                        const isSelected = referenceAnswer.trim().toLowerCase() === choice.toLowerCase();
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setReferenceAnswer(choice)}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all ${
+                              isSelected
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                            }`}
+                          >
+                            {choice}
+                          </button>
+                        );
+                      })}
+                  </div>
+                )}
+              <span className="text-[11px] text-slate-400 mt-1 block">
+                Highlighted in green on the live distribution chart and revealed to students after completion.
               </span>
             </div>
 

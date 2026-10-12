@@ -18,6 +18,64 @@ interface AnswerDistributionChartProps {
   referenceAnswer?: string | null;
 }
 
+function extractOptionParts(text: string): string[] {
+  const clean = text.trim().toLowerCase();
+  if (!clean) return [];
+  const parts = [clean];
+  const match = clean.match(/^(?:(option\s+[a-z0-9]+)|([a-z0-9]))\s*[:).\-\u2013\u2014]\s*(.+)$/i);
+  if (match) {
+    const labelFull = (match[1] || match[2] || '').trim();
+    const valuePart = (match[3] || '').trim();
+    if (labelFull) {
+      parts.push(labelFull);
+      if (labelFull.startsWith('option ')) {
+        parts.push(labelFull.slice('option '.length).trim());
+      }
+    }
+    if (valuePart) {
+      parts.push(valuePart);
+    }
+  }
+  return parts;
+}
+
+export function isReferenceMatch(
+  answer: string,
+  referenceAnswer?: string | null,
+  backendFlag?: boolean | null
+): boolean {
+  if (backendFlag === true) return true;
+  if (!referenceAnswer || !referenceAnswer.trim()) return false;
+
+  const ansParts = extractOptionParts(answer);
+  const refParts = extractOptionParts(referenceAnswer);
+
+  for (const a of ansParts) {
+    for (const r of refParts) {
+      if (a === r) return true;
+      const aCleanNum = a.replace(/^[$€£₹]|%$/g, '').trim();
+      const rCleanNum = r.replace(/^[$€£₹]|%$/g, '').trim();
+      if (aCleanNum !== '' && rCleanNum !== '') {
+        const aNum = Number(aCleanNum);
+        const rNum = Number(rCleanNum);
+        if (!Number.isNaN(aNum) && !Number.isNaN(rNum)) {
+          if (Math.abs(aNum - rNum) <= Math.max(1e-6, Math.abs(rNum) * 0.02)) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  const ansClean = answer.trim().toLowerCase();
+  const refClean = referenceAnswer.trim().toLowerCase();
+  if (refClean.length >= 4 && (ansClean.includes(refClean) || refClean.includes(ansClean))) {
+    return true;
+  }
+
+  return false;
+}
+
 export const AnswerDistributionChart: React.FC<AnswerDistributionChartProps> = ({
   round1Data,
   round2Data = [],
@@ -31,9 +89,9 @@ export const AnswerDistributionChart: React.FC<AnswerDistributionChartProps> = (
   const chartData = answerKeys.map((ans) => {
     const r1 = round1Data.find((d) => d.answer === ans);
     const r2 = round2Data.find((d) => d.answer === ans);
-    const isCorrect = referenceAnswer
-      ? ans.trim().toLowerCase() === referenceAnswer.trim().toLowerCase()
-      : false;
+    const backendCorrect =
+      r1?.is_reference_correct === true || r2?.is_reference_correct === true;
+    const isCorrect = isReferenceMatch(ans, referenceAnswer, backendCorrect);
 
     return {
       answer: ans,
@@ -56,6 +114,7 @@ export const AnswerDistributionChart: React.FC<AnswerDistributionChartProps> = (
   }
 
   const hasRound2 = round2Data.length > 0;
+  const matchedAnswers = chartData.filter((d) => d.isCorrect).map((d) => d.answer);
 
   return (
     <div className="space-y-4">
@@ -76,11 +135,12 @@ export const AnswerDistributionChart: React.FC<AnswerDistributionChartProps> = (
             />
             <Tooltip
               formatter={(value: any, name: any, item: any) => {
+                const suffix = item.payload.isCorrect ? ' [✓ Benchmark]' : '';
                 if (name === 'Round 1 (%)') {
-                  return [`${value}% (${item.payload['Round 1 Count']} responses, avg conf: ${item.payload['Round 1 Avg Conf']}/5)`, 'Round 1'];
+                  return [`${value}% (${item.payload['Round 1 Count']} responses, avg conf: ${item.payload['Round 1 Avg Conf']}/5)${suffix}`, 'Round 1'];
                 }
                 if (name === 'Round 2 (%)') {
-                  return [`${value}% (${item.payload['Round 2 Count']} responses, avg conf: ${item.payload['Round 2 Avg Conf']}/5)`, 'Round 2'];
+                  return [`${value}% (${item.payload['Round 2 Count']} responses, avg conf: ${item.payload['Round 2 Avg Conf']}/5)${suffix}`, 'Round 2'];
                 }
                 return [value, name];
               }}
@@ -118,7 +178,10 @@ export const AnswerDistributionChart: React.FC<AnswerDistributionChartProps> = (
         <div className="flex items-center gap-2 text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
           <span>
-            <strong>Reference Answer:</strong> {referenceAnswer} (highlighted in green)
+            <strong>Reference Answer:</strong> {referenceAnswer}
+            {matchedAnswers.length > 0 && matchedAnswers[0].toLowerCase() !== referenceAnswer.trim().toLowerCase()
+              ? ` (${matchedAnswers.join(', ')} — highlighted in green)`
+              : ' (highlighted in green)'}
           </span>
         </div>
       )}

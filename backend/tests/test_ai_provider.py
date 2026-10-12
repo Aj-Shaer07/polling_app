@@ -1,31 +1,33 @@
 from app.services.llm_provider import MockAIProvider
 from app.services.text_analysis import cluster_explanations
+from app.services.aggregation import _matches_reference_benchmark
 
 
 def test_mock_ai_provider_question_types():
     provider = MockAIProvider()
 
-    # 1. Factual question -> Counterexample challenge
+    # 1. Factual question -> Counterexample challenge directly referencing question & Round 1 split
     fact_ch = provider.generate_challenge(
         question_text="Is it optimal to bid higher than your valuation in Vickrey auctions?",
         question_type="FACTUAL",
         reference_answer="No",
         categories=[{"title": "Greedy bidding", "description": "Trying to guarantee a win"}],
-        distributions=[{"answer": "Yes", "count": 25}, {"answer": "No", "count": 20}],
+        distributions=[{"answer": "Yes", "count": 25, "percentage": 55.6}, {"answer": "No", "count": 20, "percentage": 44.4}],
     )
     assert fact_ch["challenge_type"] == "COUNTEREXAMPLE"
-    assert "edge scenario" in fact_ch["challenge_text"].lower()
+    assert "vickrey auctions" in fact_ch["challenge_text"].lower()
+    assert "'yes'" in fact_ch["challenge_text"].lower()
 
-    # 2. Subjective question -> Opposing arguments challenge
+    # 2. Subjective question -> Opposing arguments challenge referencing question & choices
     subj_ch = provider.generate_challenge(
         question_text="Should algorithmic trading speed be capped by financial regulators?",
         question_type="SUBJECTIVE",
         reference_answer=None,
         categories=[{"title": "Pro-regulation", "description": "Market stability concerns"}],
-        distributions=[{"answer": "Yes", "count": 22}, {"answer": "No", "count": 23}],
+        distributions=[{"answer": "Yes", "count": 22, "percentage": 48.9}, {"answer": "No", "count": 23, "percentage": 51.1}],
     )
     assert subj_ch["challenge_type"] == "OPPOSING_ARGUMENTS"
-    assert "opposing position" in subj_ch["challenge_text"].lower()
+    assert "algorithmic trading speed" in subj_ch["challenge_text"].lower()
 
     # 3. Prediction question -> Prediction reveal challenge
     pred_ch = provider.generate_challenge(
@@ -46,6 +48,14 @@ def test_mock_ai_provider_question_types():
         distributions=[],
     )
     assert open_ch["challenge_type"] == "TRANSFER_QUESTION"
+
+
+def test_mcq_option_benchmark_matching():
+    assert _matches_reference_benchmark("Option A: 6", "6") is True
+    assert _matches_reference_benchmark("Option A: 6", "Option A") is True
+    assert _matches_reference_benchmark("Option A: 6", "Option A: 6") is True
+    assert _matches_reference_benchmark("Option C: 12", "6") is False
+    assert _matches_reference_benchmark("Option B: 4", "6") is False
 
 
 def test_explanation_clustering_service():

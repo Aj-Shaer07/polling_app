@@ -82,11 +82,14 @@ app.include_router(challenges.router, prefix="/api")
 @app.get("/health")
 @app.get("/api/health")
 def health_check(db: Session = Depends(get_db)):
+    ai_active = bool(settings.GEMINI_API_KEY and settings.GEMINI_API_KEY.strip())
     try:
         db.execute(text("SELECT 1"))
         return {
             "status": "healthy",
             "database": "connected",
+            "ai_provider": "gemini" if ai_active else "mock",
+            "gemini_model": settings.GEMINI_MODEL,
             "service": settings.PROJECT_NAME,
             "environment": settings.ENVIRONMENT,
         }

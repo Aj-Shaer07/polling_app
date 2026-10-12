@@ -136,6 +136,7 @@ def analyze_round_1_and_propose_challenge(
             "is_misconception": cat.is_misconception,
             "response_count": cat.response_count,
             "percentage": cat.percentage,
+            "sample_explanations": cat.sample_explanations or [],
         }
         for cat in created_categories
     ]

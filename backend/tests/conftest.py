@@ -1,8 +1,10 @@
 import os
 import sys
 
-# Ensure backend root is on sys.path
+# Ensure backend root is on sys.path and tests always use isolated in-memory SQLite
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+os.environ["GEMINI_API_KEY"] = ""
 
 import pytest
 from sqlalchemy import create_engine
